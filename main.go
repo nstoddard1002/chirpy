@@ -15,6 +15,12 @@ func main() {
 	//address string formatting
 	formatted_port_num := ":" + port_num
 
+	//handle root path
+	chirpyServeMux.Handle("/", http.FileServer(http.Dir(".")))
+
+	//handle bird image
+	chirpyServeMux.Handle("/assets/logo.png", http.FileServer(http.Dir(".")))
+
 	//create the HTTP server
 	chirpyHTTPServer := &http.Server{
 		Addr:    formatted_port_num,
