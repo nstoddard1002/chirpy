@@ -39,11 +39,11 @@ func main() {
 	//handle /app, now with middlewaremetricsinc function
 	chirpyServeMux.Handle("/app/", apiCfg.middlewareMetricsInc(http.StripPrefix("/app", http.FileServer(http.Dir(filepath)))))
 	//handle /healthz
-	chirpyServeMux.HandleFunc("GET /healthz", handlerReadiness)
+	chirpyServeMux.HandleFunc("GET /api/healthz", handlerReadiness)
 	//handle the metrics request
-	chirpyServeMux.HandleFunc("GET /metrics", apiCfg.handlerMetrics)
+	chirpyServeMux.HandleFunc("GET /api/metrics", apiCfg.handlerMetrics)
 	//handle the reset request
-	chirpyServeMux.HandleFunc("POST /reset", apiCfg.handlerReset)
+	chirpyServeMux.HandleFunc("POST /api/reset", apiCfg.handlerReset)
 	//handle bird image
 	chirpyServeMux.Handle("/assets/logo.png", http.FileServer(http.Dir(filepath)))
 
