@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"strings"
 	"sync/atomic"
 )
 
@@ -98,11 +99,24 @@ func (cfg *apiConfig) handlerChirpValidate(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	type success_response struct {
-		Is_Valid bool `json:"valid"`
+	split_body := strings.Split(chirpychirp.Body, " ")
+	temp_word := ""
+	for idx, word := range split_body {
+		temp_word = strings.ToLower(word)
+		if temp_word == "kerfuffle" || temp_word == "sharbert" || temp_word == "fornax" {
+			split_body[idx] = "****"
+		}
 	}
+
+	cleaned_chirp := strings.Join(split_body, " ")
+
+	type success_response struct {
+		Is_Valid     bool   `json:"valid"`
+		Cleaned_Body string `json:"cleaned_body"`
+	}
+
 	chirp_valid_msg := success_response{
-		Is_Valid: true,
+		Cleaned_Body: cleaned_chirp,
 	}
 	datum1, err2 := json.Marshal(chirp_valid_msg)
 	if err2 != nil {
