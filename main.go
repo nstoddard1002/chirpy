@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
@@ -47,6 +48,9 @@ func main() {
 	//handle bird image
 	chirpyServeMux.Handle("/assets/logo.png", http.FileServer(http.Dir(filepath)))
 
+	//handle json api request
+	chirpyServeMux.HandleFunc("POST /api/validate_chirp", apiCfg.handlerChirpValidate)
+
 	//create the HTTP server
 	chirpyHTTPServer := &http.Server{
 		Addr:    formatted_port_num,
@@ -57,6 +61,58 @@ func main() {
 	log.Printf("Chirpy Server Listening on Port: %s", port_num)
 	log.Fatal(chirpyHTTPServer.ListenAndServe())
 
+}
+
+func (cfg *apiConfig) handlerChirpValidate(w http.ResponseWriter, r *http.Request) {
+	type chirp_msg struct {
+		Body string `json:"body"`
+	}
+
+	decoder := json.NewDecoder(r.Body)
+	chirpychirp := chirp_msg{}
+	err := decoder.Decode(&chirpychirp)
+	if err != nil {
+		log.Printf("error decoding JSON: %s", err)
+		w.WriteHeader(500)
+		return
+	}
+
+	type error_response struct {
+		Error_Msg string `json:"error"`
+	}
+
+	if len(chirpychirp.Body) > 140 {
+		chirp_too_long_error := error_response{
+			Error_Msg: "Chirp is too long",
+		}
+
+		datum, err1 := json.Marshal(chirp_too_long_error)
+		if err1 != nil {
+			log.Printf("error marshalling JSON: %s", err)
+			w.WriteHeader(500)
+			return
+		}
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(400)
+		w.Write(datum)
+		return
+	}
+
+	type success_response struct {
+		Is_Valid bool `json:"valid"`
+	}
+	chirp_valid_msg := success_response{
+		Is_Valid: true,
+	}
+	datum1, err2 := json.Marshal(chirp_valid_msg)
+	if err2 != nil {
+		log.Printf("error marshalling JSON: %s", err)
+		w.WriteHeader(500)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	w.Write(datum1)
 }
 
 func handlerReadiness(w http.ResponseWriter, r *http.Request) {
